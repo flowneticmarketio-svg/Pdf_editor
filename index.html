@@ -225,20 +225,66 @@
     function hideProgress() { document.getElementById("progressContainer").style.display="none"; }
 
     async function applyInversion() {
-      if (!uploadedFiles.length) return;
-      showProgress("Inverting colors...", 50);
-      const file = uploadedFiles[0];
-      const bytes = await file.arrayBuffer();
-      const pdfDoc = await PDFLib.PDFDocument.load(bytes);
-      const pages = pdfDoc.getPages();
-      pages.forEach(p=>{
-        p.drawRectangle({x:0,y:0,width:p.getWidth(),height:p.getHeight(),color:PDFLib.rgb(0.1,0.1,0.1),opacity:0.3});
-      });
-      processedPDFBytes = await pdfDoc.save();
-      const pdf = await pdfjsLib.getDocument({data:processedPDFBytes}).promise;
-      renderPreview(pdf,"Inverted PDF");
-      showDownload("inverted.pdf",[processedPDFBytes]);
-      hideProgress();
+  if (!uploadedFiles.length) return;
+
+  const file = uploadedFiles[0];
+  const bytes = await file.arrayBuffer();
+  const srcDoc = await PDFLib.PDFDocument.load(bytes);
+  const pdfDoc = await PDFLib.PDFDocument.create();
+
+  const totalPages = srcDoc.getPageCount();
+
+  for (let i = 0; i < totalPages; i++) {
+    const page = await srcDoc.getPage(i);
+
+    // ✅ Render page to canvas using PDF.js
+    const pdfForRender = await pdfjsLib.getDocument({ data: bytes }).promise;
+    const renderPage = await pdfForRender.getPage(i + 1);
+    const viewport = renderPage.getViewport({ scale: 2 }); // hi-res
+    const canvas = document.createElement("canvas");
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext("2d");
+
+    await renderPage.render({ canvasContext: ctx, viewport }).promise;
+
+    // ✅ Invert pixels
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imgData.data;
+    for (let p = 0; p < data.length; p += 4) {
+      data[p] = 255 - data[p];     // R
+      data[p + 1] = 255 - data[p + 1]; // G
+      data[p + 2] = 255 - data[p + 2]; // B
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    // ✅ Embed inverted image back into PDF
+    const imgBytes = canvas.toDataURL("image/png");
+    const imgEmbed = await pdfDoc.embedPng(imgBytes);
+    const newPage = pdfDoc.addPage([viewport.width, viewport.height]);
+    newPage.drawImage(imgEmbed, {
+      x: 0,
+      y: 0,
+      width: viewport.width,
+      height: viewport.height,
+    });
+
+    // ✅ Update progress
+    const percent = Math.round(((i + 1) / totalPages) * 100);
+    showProgress(`Inverting page ${i + 1} of ${totalPages}...`, percent);
+    await new Promise(r => setTimeout(r, 30));
+  }
+
+  processedPDFBytes = await pdfDoc.save();
+
+  // ✅ Show preview
+  const pdf = await pdfjsLib.getDocument({ data: processedPDFBytes }).promise;
+  renderPreview(pdf, "Inverted PDF (Smart)");
+
+  // ✅ Download link
+  showDownload("inverted.pdf", [processedPDFBytes]);
+
+  hideProgress();
     }
 
     async function applyLayout() {
