@@ -309,22 +309,27 @@
     }
 
     function showDownload(filename, byteArrays) {
-      const section = document.getElementById("downloadSection");
-      const links = document.getElementById("downloadLinks");
-      links.innerHTML="";
-      byteArrays.forEach((bytes,i)=>{
-        const blob = new Blob([bytes],{type:"application/pdf"});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href=url;
-        a.download=byteArrays.length>1?`page_${i+1}.pdf`:filename;
-        a.textContent=byteArrays.length>1?`Download Page ${i+1}`:`💾 Download PDF`;
-        a.className="download-button";
-        links.appendChild(a);
-        links.appendChild(document.createElement("br"));
-      });
-      section.style.display="block";
-      section.scrollIntoView({behavior:"smooth"});
+  const section = document.getElementById("downloadSection");
+  const links = document.getElementById("downloadLinks");
+  links.innerHTML = "";
+
+  byteArrays.forEach((bytes, i) => {
+    // ✅ Ensure correct ArrayBuffer for Blob
+    const blob = new Blob([new Uint8Array(bytes)], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = byteArrays.length > 1 ? `page_${i + 1}.pdf` : filename;
+    a.textContent = byteArrays.length > 1 ? `Download Page ${i + 1}` : `💾 Download PDF`;
+    a.className = "download-button";
+
+    links.appendChild(a);
+    links.appendChild(document.createElement("br"));
+  });
+
+  section.style.display = "block";
+  section.scrollIntoView({ behavior: "smooth" });
     }
   </script>
 </body>
