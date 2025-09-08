@@ -1,866 +1,278 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional PDF Editor</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
-            color: #ffffff;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            background: linear-gradient(135deg, #76b900, #a5d100);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .header h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(118, 185, 0, 0.3);
-        }
-
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.8;
-            color: #ffffff;
-            -webkit-text-fill-color: #ffffff;
-        }
-
-        .upload-section {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 2px dashed #76b900;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 30px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .upload-section:hover {
-            border-color: #a5d100;
-            background: rgba(118, 185, 0, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .upload-section.drag-over {
-            border-color: #a5d100;
-            background: rgba(118, 185, 0, 0.2);
-        }
-
-        .upload-icon {
-            font-size: 4rem;
-            color: #76b900;
-            margin-bottom: 20px;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .upload-text {
-            font-size: 1.3rem;
-            margin-bottom: 10px;
-        }
-
-        .upload-subtext {
-            opacity: 0.7;
-            font-size: 0.9rem;
-        }
-
-        .controls-section {
-            display: none;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(15px);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(118, 185, 0, 0.2);
-        }
-
-        .controls-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .control-group {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(118, 185, 0, 0.1);
-        }
-
-        .control-group h3 {
-            color: #76b900;
-            margin-bottom: 15px;
-            font-size: 1.1rem;
-        }
-
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .custom-checkbox {
-            position: relative;
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-right: 12px;
-        }
-
-        .custom-checkbox input {
-            opacity: 0;
-            position: absolute;
-            cursor: pointer;
-        }
-
-        .checkmark {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 20px;
-            width: 20px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border: 2px solid #76b900;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .custom-checkbox:hover input ~ .checkmark {
-            background-color: rgba(118, 185, 0, 0.2);
-        }
-
-        .custom-checkbox input:checked ~ .checkmark {
-            background-color: #76b900;
-        }
-
-        .checkmark:after {
-            content: "";
-            position: absolute;
-            display: none;
-        }
-
-        .custom-checkbox input:checked ~ .checkmark:after {
-            display: block;
-        }
-
-        .custom-checkbox .checkmark:after {
-            left: 6px;
-            top: 2px;
-            width: 5px;
-            height: 10px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-
-        .slider-container {
-            margin: 15px 0;
-        }
-
-        .slider {
-            width: 100%;
-            height: 8px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            outline: none;
-            -webkit-appearance: none;
-            margin: 10px 0;
-        }
-
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #76b900;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(118, 185, 0, 0.5);
-        }
-
-        .slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #76b900;
-            cursor: pointer;
-            border: none;
-            box-shadow: 0 0 10px rgba(118, 185, 0, 0.5);
-        }
-
-        .select-dropdown {
-            width: 100%;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid #76b900;
-            border-radius: 8px;
-            color: #ffffff;
-            font-size: 0.9rem;
-        }
-
-        .select-dropdown option {
-            background: #1a1a1a;
-            color: #ffffff;
-        }
-
-        .process-button {
-            background: linear-gradient(135deg, #76b900, #a5d100);
-            color: #000000;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(118, 185, 0, 0.3);
-        }
-
-        .process-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(118, 185, 0, 0.4);
-        }
-
-        .process-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .progress-section {
-            display: none;
-            margin: 30px 0;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #76b900, #a5d100);
-            border-radius: 5px;
-            transition: width 0.3s ease;
-            width: 0%;
-        }
-
-        .progress-text {
-            text-align: center;
-            margin: 10px 0;
-            font-size: 1.1rem;
-        }
-
-        .preview-section {
-            display: none;
-            margin-top: 30px;
-        }
-
-        .preview-container {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .preview-pages {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .preview-page {
-            background: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease;
-        }
-
-        .preview-page:hover {
-            transform: scale(1.05);
-        }
-
-        .preview-page canvas {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        .download-section {
-            display: none;
-            text-align: center;
-            margin: 30px 0;
-        }
-
-        .download-button {
-            background: linear-gradient(135deg, #0066cc, #0080ff);
-            color: #ffffff;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
-            margin: 0 10px;
-        }
-
-        .download-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 102, 204, 0.4);
-        }
-
-        .invert-options {
-            display: none;
-            margin-top: 15px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-        }
-
-        .level-option {
-            margin: 10px 0;
-        }
-
-        .pages-per-page-options {
-            display: none;
-            margin-top: 15px;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .controls-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .upload-section {
-                padding: 20px;
-            }
-        }
-
-        .file-info {
-            display: none;
-            background: rgba(118, 185, 0, 0.1);
-            border: 1px solid #76b900;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-
-        .file-info h4 {
-            color: #76b900;
-            margin-bottom: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NVIDIA Styled PDF Tool</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    body {
+      background: #0c0c0c;
+      color: #76b900;
+      font-family: "Segoe UI", sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin: 20px 0;
+      color: #76b900;
+    }
+    .container {
+      width: 90%;
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+      background: #111;
+      border-radius: 15px;
+      box-shadow: 0 0 15px #000;
+    }
+    input, select, button {
+      margin: 8px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+    }
+    button {
+      background: #76b900;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #98d42d;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #333;
+      border-radius: 10px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #76b900;
+      transition: width 0.3s;
+    }
+    iframe {
+      width: 100%;
+      height: 500px;
+      border: none;
+      margin-top: 15px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #000;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    .options {
+      text-align: left;
+      margin: 15px auto;
+      max-width: 400px;
+      background: #1a1a1a;
+      padding: 15px;
+      border-radius: 12px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>Professional PDF Editor</h1>
-            <p>Advanced PDF processing with professional-grade features</p>
-        </header>
+  <h1>⚡ NVIDIA Styled PDF Tool</h1>
+  <div class="container">
+    <input type="file" id="pdfInput" accept="application/pdf" multiple><br>
 
-        <section class="upload-section" id="uploadSection">
-            <div class="upload-icon">📁</div>
-            <div class="upload-text">Click to upload PDF or drag and drop</div>
-            <div class="upload-subtext">Supports multiple PDF files for merging</div>
-            <input type="file" id="fileInput" class="file-input" accept=".pdf" multiple>
-        </section>
-
-        <div class="file-info" id="fileInfo">
-            <h4>Selected Files:</h4>
-            <div id="fileList"></div>
-        </div>
-
-        <section class="controls-section" id="controlsSection">
-            <div class="controls-grid">
-                <div class="control-group">
-                    <h3>🎨 Color Inversion</h3>
-                    <div class="checkbox-group">
-                        <label class="custom-checkbox">
-                            <input type="checkbox" id="invertColors">
-                            <span class="checkmark"></span>
-                        </label>
-                        <label for="invertColors">Invert Colors</label>
-                    </div>
-                    <div class="invert-options" id="invertOptions">
-                        <div class="level-option">
-                            <input type="radio" name="invertLevel" value="1" id="level1" checked>
-                            <label for="level1">Level 1: Basic inversion</label>
-                        </div>
-                        <div class="level-option">
-                            <input type="radio" name="invertLevel" value="2" id="level2">
-                            <label for="level2">Level 2: Enhanced contrast</label>
-                        </div>
-                        <div class="level-option">
-                            <input type="radio" name="invertLevel" value="3" id="level3">
-                            <label for="level3">Level 3: Pure black/white conversion</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <h3>📄 Page Layout</h3>
-                    <div class="checkbox-group">
-                        <label class="custom-checkbox">
-                            <input type="checkbox" id="multiplePages">
-                            <span class="checkmark"></span>
-                        </label>
-                        <label for="multiplePages">Multiple Pages per Page</label>
-                    </div>
-                    <div class="pages-per-page-options" id="pagesPerPageOptions">
-                        <select class="select-dropdown" id="pagesPerPage">
-                            <option value="2">2 Pages per Page</option>
-                            <option value="3">3 Pages per Page</option>
-                            <option value="4">4 Pages per Page</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <h3>🔗 PDF Operations</h3>
-                    <div class="checkbox-group">
-                        <label class="custom-checkbox">
-                            <input type="checkbox" id="mergePDF">
-                            <span class="checkmark"></span>
-                        </label>
-                        <label for="mergePDF">Merge PDFs</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <label class="custom-checkbox">
-                            <input type="checkbox" id="splitPDF">
-                            <span class="checkmark"></span>
-                        </label>
-                        <label for="splitPDF">Split PDF</label>
-                    </div>
-                    <div id="splitOptions" style="display: none; margin-top: 15px;">
-                        <label>Split at page:</label>
-                        <input type="number" id="splitPage" min="1" value="1" class="select-dropdown" style="width: 80px; display: inline-block; margin-left: 10px;">
-                    </div>
-                </div>
-
-                <div class="control-group">
-                    <h3>⚙️ Quality Settings</h3>
-                    <div class="slider-container">
-                        <label>Image Quality: <span id="qualityValue">85</span>%</label>
-                        <input type="range" id="qualitySlider" class="slider" min="50" max="100" value="85">
-                    </div>
-                    <div class="slider-container">
-                        <label>Compression Level: <span id="compressionValue">5</span></label>
-                        <input type="range" id="compressionSlider" class="slider" min="1" max="9" value="5">
-                    </div>
-                </div>
-            </div>
-
-            <div style="text-align: center;">
-                <button class="process-button" id="processButton">Process PDF</button>
-            </div>
-        </section>
-
-        <section class="progress-section" id="progressSection">
-            <div class="progress-text" id="progressText">Processing...</div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-        </section>
-
-        <section class="preview-section" id="previewSection">
-            <h3>Preview:</h3>
-            <div class="preview-container">
-                <div class="preview-pages" id="previewPages"></div>
-            </div>
-        </section>
-
-        <section class="download-section" id="downloadSection">
-            <button class="download-button" id="downloadButton">Download Processed PDF</button>
-            <button class="download-button" id="viewButton" style="background: linear-gradient(135deg, #ff6b35, #f7931e);">View in Browser</button>
-        </section>
+    <div class="options">
+      <label><input type="checkbox" id="mergePDF"> Merge PDFs</label>
+      <label><input type="checkbox" id="splitPDF"> Split PDF at page 
+        <input type="number" id="splitPage" value="2" min="2" style="width:60px;">
+      </label>
+      <label><input type="checkbox" id="invertColors"> Invert Colors</label>
+      <div id="invertOptions" style="display:none; margin-left:20px;">
+        <label><input type="radio" name="invertLevel" value="1" checked> Normal invert</label>
+        <label><input type="radio" name="invertLevel" value="2"> Strong invert</label>
+        <label><input type="radio" name="invertLevel" value="3"> Pure B/W</label>
+      </div>
+      <label>Pages per sheet: 
+        <select id="multiplePages">
+          <option value="1">1</option>
+          <option value="2">2-in-1</option>
+          <option value="4">4-in-1</option>
+        </select>
+      </label>
+      <label>Quality: <input type="range" id="qualitySlider" min="10" max="100" value="90"></label>
     </div>
 
-    <script>
-        class PDFEditor {
-            constructor() {
-                this.files = [];
-                this.processedPDF = null;
-                this.initializeEventListeners();
-                this.initializeDropZone();
-            }
+    <button onclick="processor.start()">Process PDF</button>
+    <button onclick="processor.download()" id="downloadBtn" disabled>Download</button>
 
-            initializeEventListeners() {
-                // File input
-                document.getElementById('fileInput').addEventListener('change', (e) => {
-                    this.handleFiles(e.target.files);
-                });
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <p id="statusText">Idle</p>
 
-                // Checkboxes
-                document.getElementById('invertColors').addEventListener('change', (e) => {
-                    document.getElementById('invertOptions').style.display = e.target.checked ? 'block' : 'none';
-                });
+    <iframe id="pdfPreview"></iframe>
+  </div>
 
-                document.getElementById('multiplePages').addEventListener('change', (e) => {
-                    document.getElementById('pagesPerPageOptions').style.display = e.target.checked ? 'block' : 'none';
-                });
+<script>
+class PDFProcessor {
+  constructor() {
+    this.files = [];
+    this.processedPDF = null;
+    document.getElementById('pdfInput').addEventListener('change', e => {
+      this.files = Array.from(e.target.files);
+    });
+    document.getElementById('invertColors').addEventListener('change', e => {
+      document.getElementById('invertOptions').style.display = e.target.checked ? "block" : "none";
+    });
+  }
 
-                document.getElementById('splitPDF').addEventListener('change', (e) => {
-                    document.getElementById('splitOptions').style.display = e.target.checked ? 'block' : 'none';
-                });
+  updateProgress(percent, text) {
+    document.getElementById('progressFill').style.width = percent + "%";
+    document.getElementById('statusText').innerText = text;
+  }
 
-                // Sliders
-                document.getElementById('qualitySlider').addEventListener('input', (e) => {
-                    document.getElementById('qualityValue').textContent = e.target.value;
-                });
+  async start() {
+    if (!this.files.length) {
+      alert("Upload at least one PDF!");
+      return;
+    }
+    this.updateProgress(0, "Starting...");
+    await this.performProcessing();
+  }
 
-                document.getElementById('compressionSlider').addEventListener('input', (e) => {
-                    document.getElementById('compressionValue').textContent = e.target.value;
-                });
-
-                // Process button
-                document.getElementById('processButton').addEventListener('click', () => {
-                    this.processPDF();
-                });
-
-                // Download buttons
-                document.getElementById('downloadButton').addEventListener('click', () => {
-                    this.downloadPDF();
-                });
-
-                document.getElementById('viewButton').addEventListener('click', () => {
-                    this.viewPDF();
-                });
-
-                // Upload section click
-                document.getElementById('uploadSection').addEventListener('click', () => {
-                    document.getElementById('fileInput').click();
-                });
-            }
-
-            initializeDropZone() {
-                const uploadSection = document.getElementById('uploadSection');
-
-                uploadSection.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    uploadSection.classList.add('drag-over');
-                });
-
-                uploadSection.addEventListener('dragleave', () => {
-                    uploadSection.classList.remove('drag-over');
-                });
-
-                uploadSection.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    uploadSection.classList.remove('drag-over');
-                    this.handleFiles(e.dataTransfer.files);
-                });
-            }
-
-            handleFiles(files) {
-                this.files = Array.from(files).filter(file => file.type === 'application/pdf');
-                
-                if (this.files.length === 0) {
-                    alert('Please select valid PDF files.');
-                    return;
-                }
-
-                this.displayFileInfo();
-                document.getElementById('controlsSection').style.display = 'block';
-            }
-
-            displayFileInfo() {
-                const fileInfo = document.getElementById('fileInfo');
-                const fileList = document.getElementById('fileList');
-                
-                fileList.innerHTML = '';
-                this.files.forEach((file, index) => {
-                    const fileItem = document.createElement('div');
-                    fileItem.innerHTML = `${index + 1}. ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-                    fileList.appendChild(fileItem);
-                });
-                
-                fileInfo.style.display = 'block';
-            }
-
-            async processPDF() {
-                if (this.files.length === 0) return;
-
-                this.showProgress();
-                document.getElementById('processButton').disabled = true;
-
-                try {
-                    await this.performProcessing();
-                    await this.generatePreview();
-                    this.showDownloadOptions();
-                } catch (error) {
-                    console.error('Processing error:', error);
-                    alert('An error occurred while processing the PDF.');
-                } finally {
-                    this.hideProgress();
-                    document.getElementById('processButton').disabled = false;
-                }
-            }
-
-            async performProcessing() {
-                this.updateProgress(10, 'Loading PDFs...');
-
-                // Load all PDFs
-                const pdfDocs = [];
-                for (let i = 0; i < this.files.length; i++) {
-                    const arrayBuffer = await this.files[i].arrayBuffer();
-                    const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
-                    pdfDocs.push(pdfDoc);
-                    this.updateProgress(10 + (i + 1) * 20 / this.files.length, `Loading PDF ${i + 1}...`);
-                }
-
-                let resultDoc;
-
-                // Merge PDFs if selected
-                if (document.getElementById('mergePDF').checked && pdfDocs.length > 1) {
-                    this.updateProgress(40, 'Merging PDFs...');
-                    resultDoc = await PDFLib.PDFDocument.create();
-                    
-                    for (const pdfDoc of pdfDocs) {
-                        const pageCount = pdfDoc.getPageCount();
-                        const pageIndices = Array.from({length: pageCount}, (_, i) => i);
-                        const copiedPages = await resultDoc.copyPages(pdfDoc, pageIndices);
-                        copiedPages.forEach(page => resultDoc.addPage(page));
-                    }
-                } else {
-                    resultDoc = pdfDocs[0];
-                }
-
-                this.updateProgress(50, 'Processing pages...');
-
-                // Apply advanced processing BEFORE splitting
-                if (document.getElementById('invertColors').checked || document.getElementById('multiplePages').checked) {
-                    this.updateProgress(55, 'Applying transformations...');
-                    await this.applyAdvancedProcessing(resultDoc);
-                }
-
-                // Split PDF if selected (after other processing)
-                if (document.getElementById('splitPDF').checked) {
-                    this.updateProgress(75, 'Splitting PDF...');
-                    const splitPage = parseInt(document.getElementById('splitPage').value);
-                    const pageCount = resultDoc.getPageCount();
-                    
-                    if (splitPage > 1 && splitPage <= pageCount) {
-                        // Create a new document with pages from split point onwards
-                        const splitDoc = await PDFLib.PDFDocument.create();
-                        const pageIndices = Array.from({length: pageCount - splitPage + 1}, (_, i) => splitPage - 1 + i);
-                        const copiedPages = await splitDoc.copyPages(resultDoc, pageIndices);
-                        copiedPages.forEach(page => splitDoc.addPage(page));
-                        
-                        // Remove pages after split point from original
-                        for (let i = pageCount - 1; i >= splitPage - 1; i--) {
-                            resultDoc.removePage(i);
-                        }
-                        
-                        // For now, we'll use the first part. You could modify this to handle both parts
-                        // resultDoc remains as the first part
-                    }
-                }
-
-                this.updateProgress(90, 'Finalizing...');
-
-                // Save the result
-                const pdfBytes = await resultDoc.save();
-                this.processedPDF = pdfBytes;
-
-                this.updateProgress(100, 'Complete!');
-            }
-
-            async applyAdvancedProcessing(pdfDoc) {
-    const pages = pdfDoc.getPages();
-    const newPdf = await PDFLib.PDFDocument.create();
-
-    for (let i = 0; i < pages.length; i++) {
-        // Render page to canvas with PDF.js
-        const pageBytes = await pdfDoc.save();
-        const pdf = await pdfjsLib.getDocument({ data: pageBytes }).promise;
-        const page = await pdf.getPage(i + 1);
-
-        const viewport = page.getViewport({ scale: 2 });
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        await page.render({ canvasContext: ctx, viewport }).promise;
-
-        // === Apply Processing ===
-        if (document.getElementById("invertColors").checked) {
-            const invertLevel = document.querySelector("input[name='invertLevel']:checked").value;
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            let data = imageData.data;
-            for (let j = 0; j < data.length; j += 4) {
-                // Basic inversion
-                data[j] = 255 - data[j];     // R
-                data[j + 1] = 255 - data[j+1]; // G
-                data[j + 2] = 255 - data[j+2]; // B
-
-                if (invertLevel === "3") {
-                    // Pure BW
-                    let avg = (data[j] + data[j+1] + data[j+2]) / 3;
-                    let bw = avg > 128 ? 255 : 0;
-                    data[j] = data[j+1] = data[j+2] = bw;
-                }
-            }
-            ctx.putImageData(imageData, 0, 0);
-        }
-
-        // Convert canvas back to image for PDF
-        const imgBytes = await new Promise(resolve => canvas.toBlob(b => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(new Uint8Array(reader.result));
-            reader.readAsArrayBuffer(b);
-        }, "image/jpeg", document.getElementById("qualitySlider").value / 100));
-
-        const pageImg = await newPdf.embedJpg(imgBytes);
-        const pageDims = pageImg.scale(1);
-
-        const newPage = newPdf.addPage([pageDims.width, pageDims.height]);
-        newPage.drawImage(pageImg, { x: 0, y: 0, width: pageDims.width, height: pageDims.height });
+  async performProcessing() {
+    this.updateProgress(10, 'Loading PDFs...');
+    const pdfDocs = [];
+    for (let i = 0; i < this.files.length; i++) {
+      const arrayBuffer = await this.files[i].arrayBuffer();
+      const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+      pdfDocs.push(pdfDoc);
+      this.updateProgress(10 + (i+1) * 20/this.files.length, `Loaded PDF ${i+1}`);
     }
 
-    const pdfBytes = await newPdf.save();
-    this.processedPDF = pdfBytes;
-                    }
-            async generatePreview() {
-                this.updateProgress(95, 'Generating preview...');
-                
-                const previewSection = document.getElementById('previewSection');
-                const previewPages = document.getElementById('previewPages');
-                previewPages.innerHTML = '';
+    let resultDoc;
+    if (document.getElementById('mergePDF').checked && pdfDocs.length > 1) {
+      resultDoc = await PDFLib.PDFDocument.create();
+      for (const pdfDoc of pdfDocs) {
+        const pageCount = pdfDoc.getPageCount();
+        const pages = await resultDoc.copyPages(pdfDoc, Array.from({length: pageCount}, (_,i)=>i));
+        pages.forEach(p => resultDoc.addPage(p));
+      }
+    } else {
+      resultDoc = pdfDocs[0];
+    }
 
-                try {
-                    // Load PDF with PDF.js for preview
-                    const loadingTask = pdfjsLib.getDocument({data: this.processedPDF});
-                    const pdf = await loadingTask.promise;
-                    
-                    const maxPagesToShow = Math.min(pdf.numPages, 10); // Show max 10 pages in preview
-                    
-                    for (let i = 1; i <= maxPagesToShow; i++) {
-                        const page = await pdf.getPage(i);
-                        const scale = 0.5;
-                        const viewport = page.getViewport({scale: scale});
+    this.updateProgress(50, 'Applying transformations...');
+    resultDoc = await this.applyAdvancedProcessing(resultDoc);
 
-                        const canvas = document.createElement('canvas');
-                        const context = canvas.getContext('2d');
-                        canvas.height = viewport.height;
-                        canvas.width = viewport.width;
+    if (document.getElementById('splitPDF').checked) {
+      this.updateProgress(75, 'Splitting...');
+      const splitPage = parseInt(document.getElementById('splitPage').value);
+      const pageCount = resultDoc.getPageCount();
+      if (splitPage > 1 && splitPage <= pageCount) {
+        const splitDoc = await PDFLib.PDFDocument.create();
+        const pages = await splitDoc.copyPages(resultDoc, Array.from({length: pageCount - splitPage + 1}, (_,i)=>splitPage-1+i));
+        pages.forEach(p => splitDoc.addPage(p));
+        for (let i = pageCount-1; i >= splitPage-1; i--) resultDoc.removePage(i);
+      }
+    }
 
-                        const renderContext = {
-                            canvasContext: context,
-                            viewport: viewport
-                        };
+    this.updateProgress(90, 'Finalizing...');
+    this.processedPDF = await resultDoc.save();
+    this.preview();
+    document.getElementById('downloadBtn').disabled = false;
+    this.updateProgress(100, 'Done!');
+  }
 
-                        await page.render(renderContext).promise;
+  async applyAdvancedProcessing(pdfDoc) {
+    const newPdf = await PDFLib.PDFDocument.create();
+    const pdfBytes = await pdfDoc.save();
+    const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
 
-                        const pageDiv = document.createElement('div');
-                        pageDiv.className = 'preview-page';
-                        pageDiv.appendChild(canvas);
-                        previewPages.appendChild(pageDiv);
-                    }
+    const perSheet = parseInt(document.getElementById("multiplePages").value);
+    let sheetCanvas = document.createElement("canvas");
+    let ctx = sheetCanvas.getContext("2d");
+    let sheetCount = 0;
 
-                    previewSection.style.display = 'block';
-                } catch (error) {
-                    console.error('Preview generation error:', error);
-                }
-            }
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement("canvas");
+      const ctxPage = canvas.getContext("2d");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: ctxPage, viewport }).promise;
 
-            showProgress() {
-                document.getElementById('progressSection').style.display = 'block';
-            }
-
-            hideProgress() {
-                document.getElementById('progressSection').style.display = 'none';
-            }
-
-            updateProgress(percentage, text) {
-                document.getElementById('progressFill').style.width = percentage + '%';
-                document.getElementById('progressText').textContent = text + ` (${Math.round(percentage)}%)`;
-            }
-
-            showDownloadOptions() {
-                document.getElementById('downloadSection').style.display = 'block';
-            }
-
-            downloadPDF() {
-                if (!this.processedPDF) return;
-
-                const blob = new Blob([this.processedPDF], {type: 'application/pdf'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'processed-document.pdf';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-
-            viewPDF() {
-                if (!this.processedPDF) return;
-
-                const blob = new Blob([this.processedPDF], {type: 'application/pdf'});
-                const url = URL.createObjectURL(blob);
-                window.open(url, '_blank');
-            }
+      if (document.getElementById("invertColors").checked) {
+        const invertLevel = document.querySelector("input[name='invertLevel']:checked").value;
+        const imageData = ctxPage.getImageData(0, 0, canvas.width, canvas.height);
+        let d = imageData.data;
+        for (let j = 0; j < d.length; j+=4) {
+          d[j] = 255 - d[j];
+          d[j+1] = 255 - d[j+1];
+          d[j+2] = 255 - d[j+2];
+          if (invertLevel === "3") {
+            let avg = (d[j] + d[j+1] + d[j+2])/3;
+            let bw = avg > 128 ? 255 : 0;
+            d[j] = d[j+1] = d[j+2] = bw;
+          }
         }
+        ctxPage.putImageData(imageData, 0, 0);
+      }
 
-        // Initialize the PDF Editor when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new PDFEditor();
-        });
+      if (perSheet === 1) {
+        const imgBytes = await this.canvasToBytes(canvas);
+        const pageImg = await newPdf.embedJpg(imgBytes);
+        const newPage = newPdf.addPage([pageImg.width, pageImg.height]);
+        newPage.drawImage(pageImg, {x:0,y:0,width:pageImg.width,height:pageImg.height});
+      } else {
+        if (sheetCount % perSheet === 0) {
+          sheetCanvas = document.createElement("canvas");
+          ctx = sheetCanvas.getContext("2d");
+          sheetCanvas.width = viewport.width * (perSheet === 4 ? 2 : 1);
+          sheetCanvas.height = viewport.height * (perSheet === 4 ? 2 : 1);
+        }
+        let posX = (sheetCount % perSheet === 1 || sheetCount % perSheet === 3) ? viewport.width : 0;
+        let posY = (sheetCount % perSheet >= 2) ? viewport.height : 0;
+        ctx.drawImage(canvas, posX, posY, viewport.width, viewport.height);
+        if ((sheetCount % perSheet) === perSheet-1 || i === pdf.numPages) {
+          const imgBytes = await this.canvasToBytes(sheetCanvas);
+          const pageImg = await newPdf.embedJpg(imgBytes);
+          const newPage = newPdf.addPage([pageImg.width, pageImg.height]);
+          newPage.drawImage(pageImg, {x:0,y:0,width:pageImg.width,height:pageImg.height});
+        }
+        sheetCount++;
+      }
+    }
+    return newPdf;
+  }
 
-        // Set PDF.js worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
+  async canvasToBytes(canvas) {
+    return await new Promise(resolve => canvas.toBlob(b => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(new Uint8Array(reader.result));
+      reader.readAsArrayBuffer(b);
+    }, "image/jpeg", document.getElementById("qualitySlider").value/100));
+  }
+
+  preview() {
+    const blob = new Blob([this.processedPDF], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    document.getElementById("pdfPreview").src = url;
+  }
+
+  download() {
+    const blob = new Blob([this.processedPDF], { type: "application/pdf" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "processed.pdf";
+    a.click();
+  }
+}
+
+const processor = new PDFProcessor();
+</script>
 </body>
 </html>
