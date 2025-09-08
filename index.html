@@ -1,882 +1,331 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced PDF Processor</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced PDF Processor</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-            color: #ffffff;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
-        .header {
-            text-align: center;
-            padding: 40px 0;
-            background: rgba(118, 185, 0, 0.1);
-            margin-bottom: 40px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(118, 185, 0, 0.3);
-        }
+    .header {
+      text-align: center;
+      padding: 40px 0;
+      background: rgba(118, 185, 0, 0.1);
+      margin-bottom: 40px;
+      border-radius: 20px;
+      border: 1px solid rgba(118, 185, 0, 0.3);
+      animation: nvidia-pulse 2s ease-in-out infinite alternate;
+    }
 
-        .header h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #76b900, #9acd32);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
+    .header h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #76b900, #9acd32);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.8;
-        }
+    .header p { font-size: 1.2rem; opacity: 0.8; }
 
-        .upload-section {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 30px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-            border: 2px dashed rgba(118, 185, 0, 0.5);
-            text-align: center;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
+    .upload-section, .feature-card, .progress-container, .preview-section, .download-section {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      border: 1px solid rgba(118, 185, 0, 0.2);
+      margin-bottom: 30px;
+      padding: 25px;
+    }
 
-        .upload-section:hover {
-            border-color: #76b900;
-            background: rgba(118, 185, 0, 0.1);
-        }
+    .upload-button, .action-button, .download-button {
+      display: inline-block;
+      padding: 12px 25px;
+      background: linear-gradient(135deg, #76b900, #9acd32);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin: 10px 0;
+      text-decoration: none;
+      text-align: center;
+    }
 
-        .upload-button {
-            display: inline-block;
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #76b900, #9acd32);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin: 10px;
-        }
+    .upload-button:hover, .action-button:hover, .download-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(118, 185, 0, 0.4);
+    }
 
-        .upload-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(118, 185, 0, 0.3);
-        }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
 
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
+    .feature-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #76b900;
+      margin-bottom: 10px;
+    }
 
-        .feature-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 25px;
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(118, 185, 0, 0.2);
-            transition: all 0.3s ease;
-        }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+    }
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: #76b900;
-            box-shadow: 0 15px 35px rgba(118, 185, 0, 0.2);
-        }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #76b900, #9acd32);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
 
-        .feature-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #76b900;
-        }
+    .canvas-container {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid rgba(118, 185, 0, 0.3);
+      padding: 10px;
+      border-radius: 10px;
+    }
 
-        .control-group {
-            margin-bottom: 20px;
-        }
+    .page-canvas {
+      margin: 10px 0;
+      border: 2px solid #76b900;
+      border-radius: 5px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    }
 
-        .control-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .control-group select, .control-group input {
-            width: 100%;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(118, 185, 0, 0.3);
-            border-radius: 8px;
-            color: white;
-            font-size: 1rem;
-        }
-
-        .control-group select:focus, .control-group input:focus {
-            outline: none;
-            border-color: #76b900;
-            box-shadow: 0 0 10px rgba(118, 185, 0, 0.3);
-        }
-
-        .action-button {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #76b900, #9acd32);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        .action-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(118, 185, 0, 0.4);
-        }
-
-        .action-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .progress-container {
-            display: none;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 25px;
-            border-radius: 15px;
-            margin: 20px 0;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(118, 185, 0, 0.3);
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #76b900, #9acd32);
-            width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 4px;
-        }
-
-        .progress-text {
-            text-align: center;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-
-        .invert-options {
-            display: none;
-            background: rgba(118, 185, 0, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 15px;
-            border: 1px solid rgba(118, 185, 0, 0.3);
-        }
-
-        .radio-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .radio-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .radio-option input[type="radio"] {
-            width: auto;
-        }
-
-        .preview-section {
-            display: none;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 25px;
-            border-radius: 15px;
-            margin-top: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(118, 185, 0, 0.2);
-        }
-
-        .preview-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #76b900;
-        }
-
-        .canvas-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid rgba(118, 185, 0, 0.3);
-            border-radius: 8px;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .page-canvas {
-            margin: 10px 0;
-            border-radius: 5px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .download-section {
-            display: none;
-            text-align: center;
-            background: rgba(118, 185, 0, 0.1);
-            padding: 25px;
-            border-radius: 15px;
-            margin-top: 20px;
-            border: 1px solid rgba(118, 185, 0, 0.3);
-        }
-
-        .download-button {
-            display: inline-block;
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #76b900, #9acd32);
-            color: white;
-            text-decoration: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .download-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(118, 185, 0, 0.4);
-        }
-
-        .nvidia-glow {
-            animation: nvidia-pulse 2s ease-in-out infinite alternate;
-        }
-
-        @keyframes nvidia-pulse {
-            0% { box-shadow: 0 0 20px rgba(118, 185, 0, 0.4); }
-            100% { box-shadow: 0 0 40px rgba(118, 185, 0, 0.8), 0 0 60px rgba(118, 185, 0, 0.4); }
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .container {
-                padding: 15px;
-            }
-        }
-    </style>
+    @keyframes nvidia-pulse {
+      0% { box-shadow: 0 0 20px rgba(118, 185, 0, 0.3); }
+      100% { box-shadow: 0 0 40px rgba(118, 185, 0, 0.8), 0 0 60px rgba(118, 185, 0, 0.4); }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header nvidia-glow">
-            <h1>Advanced PDF Processor</h1>
-            <p>Professional PDF manipulation with NVIDIA-inspired performance</p>
-        </div>
-
-        <div class="upload-section">
-            <h2 style="margin-bottom: 20px;">Upload Your PDF Files</h2>
-            <input type="file" id="pdfUpload" accept=".pdf" multiple style="display: none;">
-            <button class="upload-button" onclick="document.getElementById('pdfUpload').click()">
-                📁 Select PDF Files
-            </button>
-            <p style="margin-top: 15px; opacity: 0.7;">Supports single or multiple PDF files for merging</p>
-        </div>
-
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-text" id="progressText">Processing...</div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div style="text-align: center; margin-top: 10px;">
-                <span id="progressPercent">0%</span>
-            </div>
-        </div>
-
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-title">🎨 Color Inversion</div>
-                <div class="control-group">
-                    <button class="action-button" id="invertButton" disabled onclick="showInvertOptions()">
-                        Invert Colors
-                    </button>
-                    <div class="invert-options" id="invertOptions">
-                        <label><strong>Inversion Intensity:</strong></label>
-                        <div class="radio-group">
-                            <div class="radio-option">
-                                <input type="radio" name="invertLevel" value="light" id="lightInvert">
-                                <label for="lightInvert">Light - Near-white to white</label>
-                            </div>
-                            <div class="radio-option">
-                                <input type="radio" name="invertLevel" value="medium" id="mediumInvert" checked>
-                                <label for="mediumInvert">Medium - Balanced inversion</label>
-                            </div>
-                            <div class="radio-option">
-                                <input type="radio" name="invertLevel" value="heavy" id="heavyInvert">
-                                <label for="heavyInvert">Heavy - Near-black to pure black</label>
-                            </div>
-                        </div>
-                        <button class="action-button" onclick="applyInversion()">Apply Inversion</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-title">📄 Page Layout</div>
-                <div class="control-group">
-                    <label for="pagesPerPage">Pages per page:</label>
-                    <select id="pagesPerPage">
-                        <option value="1">1 page per page (Original)</option>
-                        <option value="2">2 pages per page</option>
-                        <option value="3">3 pages per page</option>
-                        <option value="4">4 pages per page</option>
-                    </select>
-                </div>
-                <button class="action-button" id="layoutButton" disabled onclick="applyLayout()">
-                    Apply Layout
-                </button>
-            </div>
-
-            <div class="feature-card">
-                <div class="feature-title">🔗 PDF Operations</div>
-                <button class="action-button" id="mergeButton" disabled onclick="mergePDFs()">
-                    Merge All PDFs
-                </button>
-                <button class="action-button" id="splitButton" disabled onclick="splitPDF()">
-                    Split PDF Pages
-                </button>
-            </div>
-        </div>
-
-        <div class="preview-section" id="previewSection">
-            <div class="preview-title">📋 PDF Preview</div>
-            <div class="canvas-container" id="canvasContainer">
-            </div>
-        </div>
-
-        <div class="download-section" id="downloadSection">
-            <h3 style="margin-bottom: 20px;">✅ Processing Complete!</h3>
-            <a href="#" class="download-button" id="downloadButton">
-                💾 Download Processed PDF
-            </a>
-        </div>
+  <div class="container">
+    <div class="header">
+      <h1>Advanced PDF Processor</h1>
+      <p>Powered by NVIDIA-inspired performance</p>
     </div>
 
-    <script>
-        // Global variables
-        let uploadedFiles = [];
-        let processedPDFBytes = null;
-        let currentPDF = null;
+    <div class="upload-section">
+      <h2>Upload PDF Files</h2>
+      <input type="file" id="pdfUpload" accept=".pdf" multiple style="display: none;">
+      <button class="upload-button" onclick="document.getElementById('pdfUpload').click()">📁 Select PDFs</button>
+    </div>
 
-        // Initialize PDF.js worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    <div class="progress-container" id="progressContainer" style="display:none;">
+      <div id="progressText">Processing...</div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div id="progressPercent" style="text-align:center;">0%</div>
+    </div>
 
-        // File upload handler
-        document.getElementById('pdfUpload').addEventListener('change', handleFileUpload);
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-title">🎨 Invert Colors</div>
+        <button class="action-button" id="invertButton" disabled onclick="applyInversion()">Invert Colors</button>
+      </div>
 
-        async function handleFileUpload(event) {
-            const files = Array.from(event.target.files);
-            uploadedFiles = files;
-            
-            showProgress('Loading files...', 0);
-            
-            // Enable buttons
-            document.getElementById('invertButton').disabled = false;
-            document.getElementById('layoutButton').disabled = false;
-            document.getElementById('mergeButton').disabled = files.length <= 1;
-            document.getElementById('splitButton').disabled = files.length !== 1;
+      <div class="feature-card">
+        <div class="feature-title">📄 Page Layout</div>
+        <select id="pagesPerPage">
+          <option value="1">1 per page</option>
+          <option value="2">2 per page</option>
+          <option value="4">4 per page</option>
+        </select>
+        <button class="action-button" id="layoutButton" disabled onclick="applyLayout()">Apply Layout</button>
+      </div>
 
-            // Load first PDF for preview
-            if (files.length > 0) {
-                await loadPDFPreview(files[0]);
-            }
-            
-            hideProgress();
+      <div class="feature-card">
+        <div class="feature-title">🔗 Operations</div>
+        <button class="action-button" id="mergeButton" disabled onclick="mergePDFs()">Merge PDFs</button>
+        <button class="action-button" id="splitButton" disabled onclick="splitPDF()">Split PDF</button>
+      </div>
+    </div>
+
+    <div class="preview-section" id="previewSection" style="display:none;">
+      <h3 style="color:#76b900;">📋 Preview</h3>
+      <div class="canvas-container" id="canvasContainer"></div>
+    </div>
+
+    <div class="download-section" id="downloadSection" style="display:none;">
+      <h3>✅ Download</h3>
+      <div id="downloadLinks"></div>
+    </div>
+  </div>
+
+  <script>
+    let uploadedFiles = [];
+    let processedPDFBytes = null;
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+
+    document.getElementById("pdfUpload").addEventListener("change", handleFileUpload);
+
+    async function handleFileUpload(event) {
+      uploadedFiles = Array.from(event.target.files);
+      document.getElementById("invertButton").disabled = uploadedFiles.length === 0;
+      document.getElementById("layoutButton").disabled = uploadedFiles.length === 0;
+      document.getElementById("mergeButton").disabled = uploadedFiles.length < 2;
+      document.getElementById("splitButton").disabled = uploadedFiles.length !== 1;
+
+      if (uploadedFiles.length > 0) {
+        await loadPDFPreview(uploadedFiles[0]);
+      }
+    }
+
+    async function loadPDFPreview(file) {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      renderPreview(pdf, "Original Preview");
+    }
+
+    async function renderPreview(pdf, title="Processed Preview") {
+      const previewSection = document.getElementById("previewSection");
+      const container = document.getElementById("canvasContainer");
+      container.innerHTML = `<div style="text-align:center;color:#76b900;font-weight:bold;margin-bottom:10px;">${title}</div>`;
+      const pagesToShow = Math.min(3, pdf.numPages);
+      for (let i=1;i<=pagesToShow;i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 0.6 });
+        const canvas = document.createElement("canvas");
+        canvas.className = "page-canvas";
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+        container.appendChild(canvas);
+      }
+      previewSection.style.display = "block";
+    }
+
+    function showProgress(text, percent) {
+      const pc = document.getElementById("progressContainer");
+      pc.style.display = "block";
+      document.getElementById("progressText").textContent = text;
+      document.getElementById("progressFill").style.width = percent+"%";
+      document.getElementById("progressPercent").textContent = percent+"%";
+    }
+    function hideProgress() { document.getElementById("progressContainer").style.display="none"; }
+
+    async function applyInversion() {
+      if (!uploadedFiles.length) return;
+      showProgress("Inverting colors...", 50);
+      const file = uploadedFiles[0];
+      const bytes = await file.arrayBuffer();
+      const pdfDoc = await PDFLib.PDFDocument.load(bytes);
+      const pages = pdfDoc.getPages();
+      pages.forEach(p=>{
+        p.drawRectangle({x:0,y:0,width:p.getWidth(),height:p.getHeight(),color:PDFLib.rgb(0.1,0.1,0.1),opacity:0.3});
+      });
+      processedPDFBytes = await pdfDoc.save();
+      const pdf = await pdfjsLib.getDocument({data:processedPDFBytes}).promise;
+      renderPreview(pdf,"Inverted PDF");
+      showDownload("inverted.pdf",[processedPDFBytes]);
+      hideProgress();
+    }
+
+    async function applyLayout() {
+      if (!uploadedFiles.length) return;
+      showProgress("Applying layout...",50);
+      const perPage = parseInt(document.getElementById("pagesPerPage").value);
+      const file = uploadedFiles[0];
+      const bytes = await file.arrayBuffer();
+      const src = await PDFLib.PDFDocument.load(bytes);
+      const pdfDoc = await PDFLib.PDFDocument.create();
+      const indices = src.getPageIndices();
+      const pageWidth = 595, pageHeight = 842;
+      for (let i=0;i<indices.length;i+=perPage){
+        const newPage = pdfDoc.addPage([pageWidth,pageHeight]);
+        for(let j=0;j<perPage && i+j<indices.length;j++){
+          const [page] = await pdfDoc.copyPages(src,[indices[i+j]]);
+          const scale = 0.45;
+          newPage.drawPage(page,{x:50+(j*200),y:200,scale});
         }
+      }
+      processedPDFBytes = await pdfDoc.save();
+      const pdf = await pdfjsLib.getDocument({data:processedPDFBytes}).promise;
+      renderPreview(pdf,`${perPage} Pages per Sheet`);
+      showDownload(`layout_${perPage}.pdf`,[processedPDFBytes]);
+      hideProgress();
+    }
 
-        async function loadPDFPreview(file) {
-            try {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                
-                const previewSection = document.getElementById('previewSection');
-                const canvasContainer = document.getElementById('canvasContainer');
-                
-                // Clear previous previews
-                canvasContainer.innerHTML = '';
-                
-                // Render first few pages
-                const pagesToShow = Math.min(3, pdf.numPages);
-                
-                for (let i = 1; i <= pagesToShow; i++) {
-                    const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale: 0.5 });
-                    
-                    const canvas = document.createElement('canvas');
-                    canvas.className = 'page-canvas';
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    
-                    const context = canvas.getContext('2d');
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-                    
-                    canvasContainer.appendChild(canvas);
-                }
-                
-                previewSection.style.display = 'block';
-            } catch (error) {
-                console.error('Error loading PDF preview:', error);
-            }
-        }
+    async function mergePDFs() {
+      showProgress("Merging PDFs...",50);
+      const pdfDoc = await PDFLib.PDFDocument.create();
+      for(const f of uploadedFiles){
+        const bytes = await f.arrayBuffer();
+        const src = await PDFLib.PDFDocument.load(bytes);
+        const copied = await pdfDoc.copyPages(src,src.getPageIndices());
+        copied.forEach(p=>pdfDoc.addPage(p));
+      }
+      processedPDFBytes = await pdfDoc.save();
+      const pdf = await pdfjsLib.getDocument({data:processedPDFBytes}).promise;
+      renderPreview(pdf,"Merged PDF");
+      showDownload("merged.pdf",[processedPDFBytes]);
+      hideProgress();
+    }
 
-        function showInvertOptions() {
-            const options = document.getElementById('invertOptions');
-            options.style.display = options.style.display === 'none' ? 'block' : 'none';
-        }
+    async function splitPDF() {
+      showProgress("Splitting...",0);
+      const file = uploadedFiles[0];
+      const bytes = await file.arrayBuffer();
+      const src = await PDFLib.PDFDocument.load(bytes);
+      const indices = src.getPageIndices();
+      const outputs = [];
+      for (let i=0;i<indices.length;i++){
+        const doc = await PDFLib.PDFDocument.create();
+        const [page] = await doc.copyPages(src,[i]);
+        doc.addPage(page);
+        outputs.push(await doc.save());
+      }
+      const previewDoc = await PDFLib.PDFDocument.create();
+      for (let i=0;i<Math.min(3,outputs.length);i++){
+        const temp = await PDFLib.PDFDocument.load(outputs[i]);
+        const [p] = await previewDoc.copyPages(temp,[0]);
+        previewDoc.addPage(p);
+      }
+      const previewBytes = await previewDoc.save();
+      const pdf = await pdfjsLib.getDocument({data:previewBytes}).promise;
+      renderPreview(pdf,"Split Preview");
+      showDownload("split_page.pdf",outputs);
+      hideProgress();
+    }
 
-        async function applyInversion() {
-            if (uploadedFiles.length === 0) return;
-            
-            showProgress('Applying color inversion...', 0);
-            
-            try {
-                const invertLevel = document.querySelector('input[name="invertLevel"]:checked').value;
-                const pdfDoc = await PDFLib.PDFDocument.create();
-                
-                // Process each uploaded file
-                for (let fileIndex = 0; fileIndex < uploadedFiles.length; fileIndex++) {
-                    const file = uploadedFiles[fileIndex];
-                    updateProgress((fileIndex / uploadedFiles.length) * 50, `Processing file ${fileIndex + 1}...`);
-                    
-                    const existingPdfBytes = await file.arrayBuffer();
-                    const existingPdf = await PDFLib.PDFDocument.load(existingPdfBytes);
-                    
-                    // Get pages and apply inversion
-                    const pageIndices = existingPdf.getPageIndices();
-                    for (let i = 0; i < pageIndices.length; i++) {
-                        updateProgress(50 + (i / pageIndices.length) * 50, `Inverting page ${i + 1}...`);
-                        
-                        const [copiedPage] = await pdfDoc.copyPages(existingPdf, [pageIndices[i]]);
-                        
-                        // Apply color inversion based on level
-                        await applyColorInversion(copiedPage, invertLevel);
-                        
-                        pdfDoc.addPage(copiedPage);
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                    }
-                }
-                
-                processedPDFBytes = await pdfDoc.save();
-                await updatePreviewFromBytes(processedPDFBytes);
-                showDownload('inverted_pdf.pdf');
-                
-            } catch (error) {
-                console.error('Error inverting PDF:', error);
-                alert('Error processing PDF. Please try again.');
-            } finally {
-                hideProgress();
-            }
-        }
-
-        async function applyColorInversion(page, level) {
-            // Get page dimensions
-            const { width, height } = page.getSize();
-            
-            // Create color inversion overlay based on level
-            let overlayColor, overlayOpacity;
-            
-            switch(level) {
-                case 'light':
-                    // Light inversion - brightens the page
-                    overlayColor = PDFLib.rgb(0.9, 0.9, 0.9);
-                    overlayOpacity = 0.4;
-                    break;
-                case 'heavy':
-                    // Heavy inversion - darkens the page
-                    overlayColor = PDFLib.rgb(0.1, 0.1, 0.1);
-                    overlayOpacity = 0.6;
-                    break;
-                default: // medium
-                    // Medium inversion - balanced approach
-                    overlayColor = PDFLib.rgb(0.5, 0.5, 0.5);
-                    overlayOpacity = 0.4;
-                    break;
-            }
-            
-            // Add a rectangle overlay (removing blend mode for compatibility)
-            page.drawRectangle({
-                x: 0,
-                y: 0,
-                width: width,
-                height: height,
-                color: overlayColor,
-                opacity: overlayOpacity
-            });
-            
-            // Add colored border to show inversion level
-            const borderColor = level === 'light' ? PDFLib.rgb(0.8, 0.9, 1) : 
-                               level === 'heavy' ? PDFLib.rgb(0.2, 0.2, 0.3) : 
-                               PDFLib.rgb(0.5, 0.6, 0.7);
-            
-            page.drawRectangle({
-                x: 5,
-                y: 5,
-                width: width - 10,
-                height: height - 10,
-                borderColor: borderColor,
-                borderWidth: 3
-            });
-            
-            // Add inversion effect text watermark
-            try {
-                page.drawText(`${level.toUpperCase()} INVERSION APPLIED`, {
-                    x: 20,
-                    y: height - 30,
-                    size: 10,
-                    color: level === 'heavy' ? PDFLib.rgb(0.8, 0.8, 0.8) : PDFLib.rgb(0.2, 0.2, 0.2),
-                    opacity: 0.7
-                });
-            } catch (e) {
-                console.log('Text drawing skipped due to font issues');
-            }
-        }
-
-        async function applyLayout() {
-            if (uploadedFiles.length === 0) return;
-            
-            const pagesPerPage = parseInt(document.getElementById('pagesPerPage').value);
-            showProgress(`Arranging ${pagesPerPage} pages per page...`, 0);
-            
-            try {
-                const pdfDoc = await PDFLib.PDFDocument.create();
-                
-                // Process first file for layout
-                const file = uploadedFiles[0];
-                const existingPdfBytes = await file.arrayBuffer();
-                const existingPdf = await PDFLib.PDFDocument.load(existingPdfBytes);
-                
-                const totalPages = existingPdf.getPageCount();
-                
-                if (pagesPerPage === 1) {
-                    // Original layout - just copy pages
-                    const pages = await pdfDoc.copyPages(existingPdf, existingPdf.getPageIndices());
-                    pages.forEach(page => pdfDoc.addPage(page));
-                } else {
-                    // Multiple pages per page layout
-                    const pageWidth = 595; // A4 width
-                    const pageHeight = 842; // A4 height
-                    
-                    for (let i = 0; i < totalPages; i += pagesPerPage) {
-                        updateProgress((i / totalPages) * 100, `Creating layout ${Math.floor(i/pagesPerPage) + 1}...`);
-                        
-                        // Create new page
-                        const newPage = pdfDoc.addPage([pageWidth, pageHeight]);
-                        
-                        // Calculate dimensions for each sub-page
-                        const cols = pagesPerPage === 2 ? 2 : 2;
-                        const rows = pagesPerPage > 2 ? 2 : 1;
-                        const subPageWidth = pageWidth / cols;
-                        const subPageHeight = pageHeight / rows;
-                        
-                        // Add pages to the new layout
-                        for (let j = 0; j < pagesPerPage && (i + j) < totalPages; j++) {
-                            const sourcePageIndex = i + j;
-                            const [sourcePage] = await pdfDoc.copyPages(existingPdf, [sourcePageIndex]);
-                            
-                            // Calculate position
-                            const col = j % cols;
-                            const row = Math.floor(j / cols);
-                            const x = col * subPageWidth;
-                            const y = pageHeight - (row + 1) * subPageHeight;
-                            
-                            // Embed the source page as a form object
-                            const sourcePageDims = sourcePage.getSize();
-                            const scaleX = (subPageWidth - 20) / sourcePageDims.width;
-                            const scaleY = (subPageHeight - 20) / sourcePageDims.height;
-                            const scale = Math.min(scaleX, scaleY);
-                            
-                            // Draw a border around each sub-page
-                            newPage.drawRectangle({
-                                x: x + 5,
-                                y: y + 5,
-                                width: subPageWidth - 10,
-                                height: subPageHeight - 10,
-                                borderColor: PDFLib.rgb(0.7, 0.7, 0.7),
-                                borderWidth: 1
-                            });
-                            
-                            // Add page number
-                            newPage.drawText(`Page ${sourcePageIndex + 1}`, {
-                                x: x + 10,
-                                y: y + subPageHeight - 20,
-                                size: 8,
-                                color: PDFLib.rgb(0.5, 0.5, 0.5)
-                            });
-                        }
-                        
-                        await new Promise(resolve => setTimeout(resolve, 200));
-                    }
-                }
-                
-                processedPDFBytes = await pdfDoc.save();
-                await updatePreviewFromBytes(processedPDFBytes);
-                showDownload(`${pagesPerPage}_per_page.pdf`);
-                
-            } catch (error) {
-                console.error('Error applying layout:', error);
-                alert('Error processing PDF layout. Please try again.');
-            } finally {
-                hideProgress();
-            }
-        }
-
-        async function mergePDFs() {
-            if (uploadedFiles.length < 2) return;
-            
-            showProgress('Merging PDFs...', 0);
-            
-            try {
-                const pdfDoc = await PDFLib.PDFDocument.create();
-                
-                for (let i = 0; i < uploadedFiles.length; i++) {
-                    updateProgress((i / uploadedFiles.length) * 100, `Merging file ${i + 1} of ${uploadedFiles.length}...`);
-                    
-                    const file = uploadedFiles[i];
-                    const existingPdfBytes = await file.arrayBuffer();
-                    const existingPdf = await PDFLib.PDFDocument.load(existingPdfBytes);
-                    
-                    const pages = await pdfDoc.copyPages(existingPdf, existingPdf.getPageIndices());
-                    pages.forEach(page => pdfDoc.addPage(page));
-                    
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-                
-                processedPDFBytes = await pdfDoc.save();
-                await updatePreviewFromBytes(processedPDFBytes);
-                showDownload('merged.pdf');
-                
-            } catch (error) {
-                console.error('Error merging PDFs:', error);
-                alert('Error merging PDFs. Please try again.');
-            } finally {
-                hideProgress();
-            }
-        }
-
-        async function splitPDF() {
-            if (uploadedFiles.length !== 1) return;
-            
-            showProgress('Splitting PDF...', 0);
-            
-            try {
-                const file = uploadedFiles[0];
-                const existingPdfBytes = await file.arrayBuffer();
-                const existingPdf = await PDFLib.PDFDocument.load(existingPdfBytes);
-                
-                const totalPages = existingPdf.getPageCount();
-                
-                // Create a combined PDF showing all split pages for preview
-                const previewDoc = await PDFLib.PDFDocument.create();
-                
-                for (let i = 0; i < totalPages; i++) {
-                    updateProgress((i / totalPages) * 100, `Splitting page ${i + 1} of ${totalPages}...`);
-                    
-                    const [page] = await previewDoc.copyPages(existingPdf, [i]);
-                    
-                    // Add a header to show this is a split page
-                    const { width, height } = page.getSize();
-                    page.drawText(`Split Page ${i + 1} of ${totalPages}`, {
-                        x: 50,
-                        y: height - 30,
-                        size: 12,
-                        color: PDFLib.rgb(0.2, 0.7, 0.2)
-                    });
-                    
-                    previewDoc.addPage(page);
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                }
-                
-                processedPDFBytes = await previewDoc.save();
-                await updatePreviewFromBytes(processedPDFBytes);
-                showDownload('split_pages_preview.pdf');
-                
-            } catch (error) {
-                console.error('Error splitting PDF:', error);
-                alert('Error splitting PDF. Please try again.');
-            } finally {
-                hideProgress();
-            }
-        }
-
-        // Function to update preview from processed bytes
-        async function updatePreviewFromBytes(pdfBytes) {
-            try {
-                const pdf = await pdfjsLib.getDocument(pdfBytes).promise;
-                const canvasContainer = document.getElementById('canvasContainer');
-                
-                // Clear previous previews
-                canvasContainer.innerHTML = '';
-                
-                // Add processed indicator
-                const indicator = document.createElement('div');
-                indicator.style.cssText = `
-                    background: rgba(118, 185, 0, 0.2);
-                    color: #76b900;
-                    padding: 10px;
-                    border-radius: 5px;
-                    margin-bottom: 15px;
-                    text-align: center;
-                    font-weight: 600;
-                    border: 1px solid rgba(118, 185, 0, 0.5);
-                `;
-                indicator.textContent = '✅ Processed PDF Preview';
-                canvasContainer.appendChild(indicator);
-                
-                // Render processed pages
-                const pagesToShow = Math.min(5, pdf.numPages);
-                
-                for (let i = 1; i <= pagesToShow; i++) {
-                    const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale: 0.6 });
-                    
-                    const canvas = document.createElement('canvas');
-                    canvas.className = 'page-canvas';
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    canvas.style.border = '2px solid #76b900';
-                    
-                    const context = canvas.getContext('2d');
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-                    
-                    // Add page label
-                    const pageLabel = document.createElement('div');
-                    pageLabel.style.cssText = `
-                        color: #76b900;
-                        font-size: 0.9rem;
-                        margin: 5px 0 15px 0;
-                        text-align: center;
-                        font-weight: 500;
-                    `;
-                    pageLabel.textContent = `Processed Page ${i}`;
-                    
-                    canvasContainer.appendChild(pageLabel);
-                    canvasContainer.appendChild(canvas);
-                }
-                
-                if (pdf.numPages > pagesToShow) {
-                    const moreLabel = document.createElement('div');
-                    moreLabel.style.cssText = `
-                        color: #76b900;
-                        text-align: center;
-                        font-style: italic;
-                        margin: 15px 0;
-                        opacity: 0.8;
-                    `;
-                    moreLabel.textContent = `... and ${pdf.numPages - pagesToShow} more processed pages`;
-                    canvasContainer.appendChild(moreLabel);
-                }
-                
-            } catch (error) {
-                console.error('Error updating preview:', error);
-            }
-        }
-
-        function showProgress(text, percent) {
-            const container = document.getElementById('progressContainer');
-            const progressText = document.getElementById('progressText');
-            const progressFill = document.getElementById('progressFill');
-            const progressPercent = document.getElementById('progressPercent');
-            
-            container.style.display = 'block';
-            progressText.textContent = text;
-            progressFill.style.width = percent + '%';
-            progressPercent.textContent = Math.round(percent) + '%';
-        }
-
-        function updateProgress(percent, text) {
-            const progressText = document.getElementById('progressText');
-            const progressFill = document.getElementById('progressFill');
-            const progressPercent = document.getElementById('progressPercent');
-            
-            if (text) progressText.textContent = text;
-            progressFill.style.width = percent + '%';
-            progressPercent.textContent = Math.round(percent) + '%';
-        }
-
-        function hideProgress() {
-            document.getElementById('progressContainer').style.display = 'none';
-        }
-
-        function showDownload(filename) {
-            if (!processedPDFBytes) return;
-            
-            const blob = new Blob([processedPDFBytes], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-            
-            const downloadButton = document.getElementById('downloadButton');
-            downloadButton.href = url;
-            downloadButton.download = filename;
-            
-            document.getElementById('downloadSection').style.display = 'block';
-            
-            // Auto-scroll to download section
-            document.getElementById('downloadSection').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Add some visual feedback
-        document.querySelectorAll('.action-button').forEach(button => {
-            button.addEventListener('click', function() {
-                this.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    this.style.transform = '';
-                }, 150);
-            });
-        });
-    </script>
+    function showDownload(filename, byteArrays) {
+      const section = document.getElementById("downloadSection");
+      const links = document.getElementById("downloadLinks");
+      links.innerHTML="";
+      byteArrays.forEach((bytes,i)=>{
+        const blob = new Blob([bytes],{type:"application/pdf"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href=url;
+        a.download=byteArrays.length>1?`page_${i+1}.pdf`:filename;
+        a.textContent=byteArrays.length>1?`Download Page ${i+1}`:`💾 Download PDF`;
+        a.className="download-button";
+        links.appendChild(a);
+        links.appendChild(document.createElement("br"));
+      });
+      section.style.display="block";
+      section.scrollIntoView({behavior:"smooth"});
+    }
+  </script>
 </body>
 </html>
