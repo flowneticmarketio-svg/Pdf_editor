@@ -716,23 +716,61 @@
             }
 
             async applyAdvancedProcessing(pdfDoc) {
-                // This is where we would apply color inversion and page layout changes
-                // For now, we'll simulate the processing
-                const pages = pdfDoc.getPages();
-                
-                if (document.getElementById('multiplePages').checked) {
-                    const pagesPerPage = parseInt(document.getElementById('pagesPerPage').value);
-                    // Simulate multiple pages per page processing
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
+    const pages = pdfDoc.getPages();
+    const newPdf = await PDFLib.PDFDocument.create();
 
-                if (document.getElementById('invertColors').checked) {
-                    const invertLevel = document.querySelector('input[name="invertLevel"]:checked').value;
-                    // Simulate color inversion processing
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+    for (let i = 0; i < pages.length; i++) {
+        // Render page to canvas with PDF.js
+        const pageBytes = await pdfDoc.save();
+        const pdf = await pdfjsLib.getDocument({ data: pageBytes }).promise;
+        const page = await pdf.getPage(i + 1);
+
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+
+        // === Apply Processing ===
+        if (document.getElementById("invertColors").checked) {
+            const invertLevel = document.querySelector("input[name='invertLevel']:checked").value;
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let data = imageData.data;
+            for (let j = 0; j < data.length; j += 4) {
+                // Basic inversion
+                data[j] = 255 - data[j];     // R
+                data[j + 1] = 255 - data[j+1]; // G
+                data[j + 2] = 255 - data[j+2]; // B
+
+                if (invertLevel === "3") {
+                    // Pure BW
+                    let avg = (data[j] + data[j+1] + data[j+2]) / 3;
+                    let bw = avg > 128 ? 255 : 0;
+                    data[j] = data[j+1] = data[j+2] = bw;
                 }
             }
+            ctx.putImageData(imageData, 0, 0);
+        }
 
+        // Convert canvas back to image for PDF
+        const imgBytes = await new Promise(resolve => canvas.toBlob(b => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(new Uint8Array(reader.result));
+            reader.readAsArrayBuffer(b);
+        }, "image/jpeg", document.getElementById("qualitySlider").value / 100));
+
+        const pageImg = await newPdf.embedJpg(imgBytes);
+        const pageDims = pageImg.scale(1);
+
+        const newPage = newPdf.addPage([pageDims.width, pageDims.height]);
+        newPage.drawImage(pageImg, { x: 0, y: 0, width: pageDims.width, height: pageDims.height });
+    }
+
+    const pdfBytes = await newPdf.save();
+    this.processedPDF = pdfBytes;
+                    }
             async generatePreview() {
                 this.updateProgress(95, 'Generating preview...');
                 
